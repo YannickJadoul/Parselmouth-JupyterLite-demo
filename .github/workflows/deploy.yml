@@ -1,0 +1,49 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-jupyterlite:
+    name: Build JupyterLite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install the dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build the JupyterLite site
+        run: |
+          jupyter lite build --contents content --output-dir dist
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build-jupyterlite
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
