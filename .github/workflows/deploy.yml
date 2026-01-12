@@ -4,8 +4,41 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
+  build-parselmouth-whl:
+    name: Build Parselmouth WASM wheel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Setup Pyodide
+        run: |
+          pip install pyodide-build
+          pyodide xbuildenv install 0.29.1
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.9
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Clone Parselmouth
+        uses: actions/checkout@v6
+        with:
+          repository: 'YannickJadoul/Parselmouth'
+          ref: 'pyodide-fixes'
+          submodules: recursive
+
+      - name: Build Parselmouth Pyodide wheel
+        run: |
+          pyodide build
+
+
   build-jupyterlite:
     name: Build JupyterLite
     runs-on: ubuntu-latest
